@@ -138,7 +138,6 @@ final class MacWindow: Window {
         let globalMaxY = allMonitors.map(\.rect.maxY).max() ?? nodeMonitor.visibleRect.maxY
         let globalMinX = allMonitors.map(\.rect.minX).min() ?? nodeMonitor.visibleRect.minX
 
-        // Extra padding to clear window shadows and rounded corners
         let offscreenPad: CGFloat = 50
 
         let p: CGPoint
