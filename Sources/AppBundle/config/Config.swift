@@ -59,8 +59,15 @@ struct Config: ConvenienceCopyable {
     var modes: [String: Mode] = [:]
     var onWindowDetected: [WindowDetectedCallback] = []
     var onModeChanged: [any Command] = []
+
+    var defaultOptimalHideCorner: OptimalHideCorner = .bottomRightCorner
 }
 
 enum DefaultContainerOrientation: String {
     case horizontal, vertical, auto
+}
+
+enum OptimalHideCorner: String {
+    case bottomLeftCorner = "bottom-left"
+    case bottomRightCorner = "bottom-right"
 }
