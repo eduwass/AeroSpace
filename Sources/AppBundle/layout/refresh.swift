@@ -136,9 +136,7 @@ func refreshObs(_: AXObserver, _: AXUIElement, notif: CFString, _: UnsafeMutable
     }
 }
 
-enum OptimalHideCorner {
-    case bottomLeftCorner, bottomRightCorner
-}
+// OptimalHideCorner enum is now in Config.swift (supports TOML parsing)
 
 @MainActor
 private func layoutWorkspaces() async throws {
@@ -167,11 +165,13 @@ private func layoutWorkspaces() async throws {
         func contains(_ monitor: Monitor, _ point: CGPoint) -> Int { monitor.rect.contains(point) ? 1 : 0 }
         let important = 10
 
+        let blcScore = monitors.sumOfInt { contains($0, blc1) + contains($0, blc2) + important * contains($0, blc3) }
+        let brcScore = monitors.sumOfInt { contains($0, brc1) + contains($0, brc2) + important * contains($0, brc3) }
+
         let corner: OptimalHideCorner =
-            monitors.sumOfInt { contains($0, blc1) + contains($0, blc2) + important * contains($0, blc3) } <
-            monitors.sumOfInt { contains($0, brc1) + contains($0, brc2) + important * contains($0, brc3) }
-            ? .bottomLeftCorner
-            : .bottomRightCorner
+            blcScore < brcScore ? .bottomLeftCorner :
+            brcScore < blcScore ? .bottomRightCorner :
+            config.defaultOptimalHideCorner // Scores tied — use config default
         monitorToOptimalHideCorner[monitor.rect.topLeftCorner] = corner
     }
 
@@ -182,7 +182,7 @@ private func layoutWorkspaces() async throws {
         try await workspace.layoutWorkspace()
     }
     for workspace in Workspace.all where !workspace.isVisible {
-        let corner = monitorToOptimalHideCorner[workspace.workspaceMonitor.rect.topLeftCorner] ?? .bottomRightCorner
+        let corner = monitorToOptimalHideCorner[workspace.workspaceMonitor.rect.topLeftCorner] ?? config.defaultOptimalHideCorner
         for window in workspace.allLeafWindowsRecursive {
             try await (window as! MacWindow).hideInCorner(corner) // todo as!
         }

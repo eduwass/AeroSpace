@@ -124,6 +124,7 @@ private let configParser: [String: any ParserProtocol<Config>] = [
     "gaps": Parser(\.gaps, parseGaps),
     "workspace-to-monitor-force-assignment": Parser(\.workspaceToMonitorForceAssignment, parseWorkspaceToMonitorAssignment),
     "on-window-detected": Parser(\.onWindowDetected, parseOnWindowDetectedArray),
+    "default-hide-corner": Parser(\.defaultOptimalHideCorner, parseOptimalHideCorner),
 
     // Deprecated
     "non-empty-workspaces-root-containers-layout-on-startup": Parser(\._nonEmptyWorkspacesRootContainersLayoutOnStartup, parseStartupRootContainerLayout),
@@ -361,6 +362,13 @@ private func parseArrayOfStrings(_ raw: Json, _ backtrace: ConfigBacktrace) -> P
                 parseString(elem, backtrace + .index(index))
             }
         }
+}
+
+private func parseOptimalHideCorner(_ raw: Json, _ backtrace: ConfigBacktrace) -> ParsedConfig<OptimalHideCorner> {
+    parseString(raw, backtrace).flatMap {
+        OptimalHideCorner(rawValue: $0)
+            .orFailure(.semantic(backtrace, "Can't parse default hide corner '\($0)'. Possible values: bottom-left, bottom-right"))
+    }
 }
 
 private func parseDefaultContainerOrientation(_ raw: Json, _ backtrace: ConfigBacktrace) -> ParsedConfig<DefaultContainerOrientation> {

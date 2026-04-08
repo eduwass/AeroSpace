@@ -132,19 +132,22 @@ final class MacWindow: Window {
                     CGPoint(x: absolutePoint.x / monitorRect.width, y: absolutePoint.y / monitorRect.height)
             }
         }
+        // Compute the lowest+rightmost point across ALL monitors, with padding to fully hide window chrome
+        let allMonitors = monitors
+        let globalMaxX = allMonitors.map(\.rect.maxX).max() ?? nodeMonitor.visibleRect.maxX
+        let globalMaxY = allMonitors.map(\.rect.maxY).max() ?? nodeMonitor.visibleRect.maxY
+        let globalMinX = allMonitors.map(\.rect.minX).min() ?? nodeMonitor.visibleRect.minX
+
+        // Extra padding to clear window shadows and rounded corners
+        let offscreenPad: CGFloat = 50
+
         let p: CGPoint
         switch corner {
             case .bottomLeftCorner:
                 guard let s = try await getAxSize() else { fallthrough }
-                // Zoom will jump off if you do one pixel offset https://github.com/nikitabobko/AeroSpace/issues/527
-                // todo this ad hoc won't be necessary once I implement optimization suggested by Zalim
-                let onePixelOffset = macApp.appId == .zoom ? .zero : CGPoint(x: 1, y: -1)
-                p = nodeMonitor.visibleRect.bottomLeftCorner + onePixelOffset + CGPoint(x: -s.width, y: 0)
+                p = CGPoint(x: globalMinX - s.width - offscreenPad, y: globalMaxY + offscreenPad)
             case .bottomRightCorner:
-                // Zoom will jump off if you do one pixel offset https://github.com/nikitabobko/AeroSpace/issues/527
-                // todo this ad hoc won't be necessary once I implement optimization suggested by Zalim
-                let onePixelOffset = macApp.appId == .zoom ? .zero : CGPoint(x: 1, y: 1)
-                p = nodeMonitor.visibleRect.bottomRightCorner - onePixelOffset
+                p = CGPoint(x: globalMaxX + offscreenPad, y: globalMaxY + offscreenPad)
         }
         setAxFrame(p, nil)
     }
