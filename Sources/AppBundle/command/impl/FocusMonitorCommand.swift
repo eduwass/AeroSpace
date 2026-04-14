@@ -56,10 +56,17 @@ extension Monitor {
 
     func findRelativeMonitor(inDirection direction: CardinalDirection) -> (monitorsInDirection: [Monitor], index: Int)? {
         let currentMonitor = self
-        let monitors = sortedMonitors.filter {
+        let filtered = sortedMonitors.filter {
             currentMonitor.rect.topLeftCorner == $0.rect.topLeftCorner ||
                 $0.relation(to: currentMonitor) == direction.orientation
         }
+        // For vertical navigation, sort by Y so monitors are ordered top-to-bottom
+        // regardless of minX. Without this, a bottom monitor whose minX is less than
+        // the top monitor's minX (e.g. extends further left) sorts before the top
+        // monitor and "up"/"down" get inverted or stop at the wrong edge.
+        let monitors = direction.orientation == .v
+            ? filtered.sortedBy([\.rect.minY, \.rect.minX])
+            : filtered
         guard let index = monitors.firstIndex(where: { $0.rect.topLeftCorner == currentMonitor.rect.topLeftCorner }) else { return nil }
         return (monitors, index + direction.focusOffset)
     }
